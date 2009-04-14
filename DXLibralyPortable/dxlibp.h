@@ -283,7 +283,9 @@ extern "C" {
 		int	CheckSoundMem( int handle );
 		/*“Ç‚İ‚İŒn*/
 		int LoadSoundMem(const char* filename);
-		int LoadStreamSound(const char* filename);
+		//20090415 Mp3‚Ì“Ç‚İ‚İ‚Ì‚‘¬‰»‚Ì‚½‚ßd—l•ÏX
+		//int LoadStreamSound(const char* filename);
+		int LoadStreamSound(const char *filename,int SetPcmLen DXPDEFARG(-1),int* AnsPcmLen DXPDEFARG(NULL));
 		int	DeleteSoundMem( int SoundHandle, int LogOutFlag );
 		/*Ä¶Œn*/
 		int PlaySoundMem(int SoundHandle,int PlayType/*,int TopPositionFlag DXPDEFARG(1)*/);
