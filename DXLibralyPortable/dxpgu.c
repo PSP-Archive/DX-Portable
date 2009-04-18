@@ -745,7 +745,7 @@ int SetTexture(int handle,int TransFlag)//テクスチャを使う描画関数で呼ぶ。テクス
 	return 0;
 }
 
-static int SetBaseColor(u32 color)
+/*static*/ int SetBaseColor(u32 color)
 /* DrawLine等のテクスチャ非使用関数で呼ぶ。色のセット*/
 {
 	GUSTART;
