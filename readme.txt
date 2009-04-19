@@ -31,5 +31,5 @@ Uses libccc by BenHur
 y•K{‚¶‚á‚È‚¢‚¯‚Ç“ü‚ê‚Ä‚­‚ê‚½‚çŠğ‚µ‚¢€–Úz
 
 DXƒ‰ƒCƒuƒ‰ƒŠPortable
-DX Library Portable Copyright (C) 2008-2009 Kawai Yuichi, All rights reserved.
+DX Library Portable Copyright (C) 2008-2009 Kawai Yuichi.
 

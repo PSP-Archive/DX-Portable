@@ -26,7 +26,7 @@ pspDebugScreen系関数は使うと泣きを見るので使用禁止。VRAMの先頭数千バイトが使えな
 /*大域変数定義部*/
 DXPGPUSETTING gusettings = 
 {
-	{{GU_PSM_8888},{GU_PSM_8888}},								/*フロントバッファ*/
+	{{GU_PSM_8888,NULL,NULL,NULL,NULL,NULL,480,272,512,480,272,0x00000000,1,0,1,0,0},{GU_PSM_8888,NULL,NULL,NULL,NULL,NULL,480,272,512,480,272,0x00000000,1,0,1,0,0}},								/*フロントバッファ*/
 	{GU_PSM_4444},									/*深度バッファのポインタ*/
 	NULL,									/*描画先グラフィック*/
 	NULL,										/*セットされているテクスチャ*/
@@ -1535,4 +1535,47 @@ int SetDrawScreen(int ghandle)
 int SaveDrawScreen( int x1, int y1, int x2, int y2, char *FileName )
 {
 	return 0;
+}
+
+int SetDisplayFormat(int format)
+{
+	switch(format)
+	{
+	case GU_PSM_4444:
+	case GU_PSM_5551:
+	case GU_PSM_5650:
+	case GU_PSM_8888:
+		break;
+	default:
+		return -1;
+	}
+	if(format == gusettings.displaybuffer[0].psm)return 0;
+	if(gusettings.displaybuffer[0].pvram == NULL)
+	{
+		gusettings.displaybuffer[0].psm = gusettings.displaybuffer[1].psm = format;
+		return 0;
+	}
+	int size = GraphSize2DataSize(512,272,format);
+	int pformat = gusettings.displaybuffer[0].psm;
+	FreeVRAM(gusettings.displaybuffer[0].pvram);
+	FreeVRAM(gusettings.displaybuffer[1].pvram);
+	gusettings.displaybuffer[0].pvram = AllocVRAM(size,1);
+	gusettings.displaybuffer[1].pvram = AllocVRAM(size,1);
+	if(gusettings.displaybuffer[0].pvram == NULL || gusettings.displaybuffer[1].pvram == NULL)
+	{
+		FreeVRAM(gusettings.displaybuffer[0].pvram);
+		FreeVRAM(gusettings.displaybuffer[1].pvram);
+		size = GraphSize2DataSize(512,272,pformat);
+		gusettings.displaybuffer[0].pvram = AllocVRAM(size,1);
+		gusettings.displaybuffer[1].pvram = AllocVRAM(size,1);
+		return -1;
+	}
+	gusettings.displaybuffer[0].psm = format;
+	gusettings.displaybuffer[1].psm = format;
+	return 0;
+}
+
+int GetDisplayFormat()
+{
+	return gusettings.displaybuffer[0].psm;
 }
