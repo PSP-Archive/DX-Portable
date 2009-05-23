@@ -53,6 +53,15 @@ u32 __attribute__((aligned(16))) gulist[GULIST_LEN];/*GPU‚É‘—‚é–½—ß‚ğ—­‚ß‚Ş‚½‚
 DXPTEXTURE2		*texlist	= NULL;
 DXPGRAPHDATA	*graphlist	= NULL;
 
+u8 psm2bytex2table[]={
+	4,
+	4,
+	4,
+	8,
+	1,
+	2,
+};
+
 
 /*ŠÖ”’è‹`•”*/
 //static int ApplyBrightAndBlendMode();
