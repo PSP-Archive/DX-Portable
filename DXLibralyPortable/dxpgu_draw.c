@@ -4,6 +4,7 @@ DXƒ‰ƒCƒuƒ‰ƒŠPortable@•`‰æŠÖ”ŒQ
 */
 
 #include <pspgu.h>
+#include <pspgum.h>
 #include <pspdisplay.h>
 #include <pspdebug.h>
 #include "dxlibp.h"
