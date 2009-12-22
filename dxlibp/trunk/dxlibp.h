@@ -4,7 +4,7 @@
 
  * DXƒ‰ƒCƒuƒ‰ƒŠPortable 
 
- * Ver0.5.0
+ * Ver0.5.1
 
  * »ìÒF—J—ù
 
