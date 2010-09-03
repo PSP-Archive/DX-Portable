@@ -145,123 +145,123 @@ typedef	struct	DXPGRAPHICSHANDLE
 	int			handle;
 }DXPGRAPHICSHANDLE;
 
-typedef struct DXPMODEL_VERTEX
-{
-//	float weight;
-	float uv;
-	COLOR_U8 color;
-	VECTOR norm;
-	VECTOR pos;
-}DXPMODEL_VERTEX;
+//typedef struct DXPMODEL_VERTEX
+//{
+////	float weight;
+//	float uv;
+//	COLOR_U8 color;
+//	VECTOR norm;
+//	VECTOR pos;
+//}DXPMODEL_VERTEX;
 
 
-typedef struct DXPMODEL_TEXTURE
-{
-	int handle;
-	int backup;
-	int addressMode[2];
-	int filterMode;
-}DXPMODEL_TEXTURE;
-
-typedef struct DXPMODEL_MATERIAL
-{
-	//名前
-	char *name;
-	//色
-	COLOR_U8 ambient;
-	COLOR_U8 emissive;
-	COLOR_U8 diffuse;
-	COLOR_U8 specular;
-	float specularPower;
-	//テクスチャ
-	int texIndex;
-	//パラメータ
-	int blendMode;
-	int blendParam;
-}DXPMODEL_MATERIAL;
-
-typedef struct DXPMODEL_SHAPE
-{
-	
-}DXPMODEL_SHAPE;
-
-typedef struct DXPMODEL_MESH
-{
-	char *name;
-	//bone
-	//int boneIndex;
-	//material
-	int materialIndex;
-	DXPMODEL_SHAPE *shape;
-}DXPMODEL_MESH;
-
-typedef struct DXPMODEL_BONE
-{
-	MATRIX Offset;
-	int MainFrame;
-	MATRIX q;
-}DXPMODEL_BONE;
-
-typedef struct DXPMODEL_FRAME
-{
-	struct
-	{
-		struct DXPMODEL_FRAME//二分木的な物で管理する
-			*parent,
-			*next,
-			*prev,
-			*child;
-	}fcb;
-
-	char *name;
-	int MeshNum;
-	DXPMODEL_MESH *Mesh;
-
-	VECTOR Translate;
-	VECTOR Scale;
-	QUATERNION Rotate;
-	
-	unsigned visible : 1;
-
-
-	
-}DXPMODEL_FRAME;
-
-typedef struct DXPMODEL
-{
-	char *name;
-	//
-	VECTOR Translate;
-	VECTOR Scale;
-	QUATERNION Rotate;
-	MATRIX Local2WorldMatrix;
-	struct
-	{
-		COLOR_F 
-			diffuse,
-			specular,
-			emissive,
-			ambient;
-	}ColorScale;//マテリアルカラーにCPUで乗算しておく
-	unsigned SemiTransFlag : 1;//半透明のモノを持っているかどうか
-	float Alpha;
-	unsigned visible : 1;
-	unsigned usedepth : 1;
-	unsigned writedepth : 1;
-	unsigned usevertdiffcolor : 1;
-
-	//bone
-	;
-	//texture
-	int TextureNum;
-	DXPMODEL_TEXTURE *Texture;
-	//material
-	int MaterialNum;
-	DXPMODEL_MATERIAL *Material;
-	//mesh
-	int MeshNum;
-	DXPMODEL_MESH *Mesh;
-}DXPMODEL;
+//typedef struct DXPMODEL_TEXTURE
+//{
+//	int handle;
+//	int backup;
+//	int addressMode[2];
+//	int filterMode;
+//}DXPMODEL_TEXTURE;
+//
+//typedef struct DXPMODEL_MATERIAL
+//{
+//	//名前
+//	char *name;
+//	//色
+//	COLOR_U8 ambient;
+//	COLOR_U8 emissive;
+//	COLOR_U8 diffuse;
+//	COLOR_U8 specular;
+//	float specularPower;
+//	//テクスチャ
+//	int texIndex;
+//	//パラメータ
+//	int blendMode;
+//	int blendParam;
+//}DXPMODEL_MATERIAL;
+//
+//typedef struct DXPMODEL_SHAPE
+//{
+//	
+//}DXPMODEL_SHAPE;
+//
+//typedef struct DXPMODEL_MESH
+//{
+//	char *name;
+//	//bone
+//	//int boneIndex;
+//	//material
+//	int materialIndex;
+//	DXPMODEL_SHAPE *shape;
+//}DXPMODEL_MESH;
+//
+//typedef struct DXPMODEL_BONE
+//{
+//	MATRIX Offset;
+//	int MainFrame;
+//	MATRIX q;
+//}DXPMODEL_BONE;
+//
+//typedef struct DXPMODEL_FRAME
+//{
+//	struct
+//	{
+//		struct DXPMODEL_FRAME//二分木的な物で管理する
+//			*parent,
+//			*next,
+//			*prev,
+//			*child;
+//	}fcb;
+//
+//	char *name;
+//	int MeshNum;
+//	DXPMODEL_MESH *Mesh;
+//
+//	VECTOR Translate;
+//	VECTOR Scale;
+//	QUATERNION Rotate;
+//	
+//	unsigned visible : 1;
+//
+//
+//	
+//}DXPMODEL_FRAME;
+//
+//typedef struct DXPMODEL
+//{
+//	char *name;
+//	//
+//	VECTOR Translate;
+//	VECTOR Scale;
+//	QUATERNION Rotate;
+//	MATRIX Local2WorldMatrix;
+//	struct
+//	{
+//		COLOR_F 
+//			diffuse,
+//			specular,
+//			emissive,
+//			ambient;
+//	}ColorScale;//マテリアルカラーにCPUで乗算しておく
+//	unsigned SemiTransFlag : 1;//半透明のモノを持っているかどうか
+//	float Alpha;
+//	unsigned visible : 1;
+//	unsigned usedepth : 1;
+//	unsigned writedepth : 1;
+//	unsigned usevertdiffcolor : 1;
+//
+//	//bone
+//	;
+//	//texture
+//	int TextureNum;
+//	DXPMODEL_TEXTURE *Texture;
+//	//material
+//	int MaterialNum;
+//	DXPMODEL_MATERIAL *Material;
+//	//mesh
+//	int MeshNum;
+//	DXPMODEL_MESH *Mesh;
+//}DXPMODEL;
 
 
 typedef struct DXPGRAPHICSDATA
@@ -328,7 +328,7 @@ typedef struct DXPGRAPHICSDATA
 
 	DXPTEXTURE3 *texarray[DXP_BUILDOPTION_TEXTURE_MAXNUM];
 	DXPGRAPHICSHANDLE *grapharray[DXP_BUILDOPTION_GHANDLE_MAXNUM];
-	DXPMODEL *modelarray[DXP_BUILDOPTION_MODEL_MAXNUM];
+//	DXPMODEL *modelarray[DXP_BUILDOPTION_MODEL_MAXNUM];
 }DXPGRAPHICSDATA;
 
 int dxpGraphicsInit();

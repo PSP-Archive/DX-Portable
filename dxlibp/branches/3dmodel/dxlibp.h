@@ -23,7 +23,7 @@
 #define DXP_BUILDOPTION_MODEL_MAXNUM		16		//3Dモデルの最大数
 #define DXP_BUILDOPTION_FONTHANDLE_MAX		8
 
-#define DXP_BUILDOPTION_NO3D						//3D機能の無効化。これをコメントアウトした場合、実装途中の3D関数が使用可能になりますが、libpspgumへの依存が発生します。
+//#define DXP_BUILDOPTION_NO3D						//3D機能の無効化。これをコメントアウトした場合、実装途中の3D関数が使用可能になりますが、libpspgumへの依存が発生します。
 
 /*---定数とマクロ---*/
 
@@ -42,15 +42,9 @@
 
 
 /*Windowsの定義をすこし流用*/
-#ifdef BYTE
 #define	BYTE	u8
-#endif
-#ifdef WORD
 #define	WORD	u16
-#endif
-#ifdef DWORD
 #define	DWORD	u32
-#endif
 
 /* 文字コード定義 */
 #define DXP_CP_SJIS			(0x0d)
@@ -342,13 +336,7 @@ typedef struct MATRIX
 	};
 }MATRIX;
 
-typedef struct QUATERNION
-{
-	float x;
-	float y;
-	float z;
-	float w;
-}QUATERNION;
+typedef ScePspFVector4 QUATERNION;
 
 typedef struct COLOR_U8
 {

@@ -1,4 +1,13 @@
-TARGET_LIB = dxlibp.a
+MAKE_EBOOT = 1
+
+ifdef MAKE_EBOOT
+TARGET = dxptest
+EXTRA_TARGETS = EBOOT.PBP
+OBJS = testmain.o
+LIBS = -lpspgum -lpspgu -lpsppower -lpspaudio -lpspaudiocodec -lpsprtc -lpsppower -lpspvalloc -lz -lstdc++ -lm
+else
+TARGET_LIB = libdxp.a 
+endif
 
 #general functions
 OBJS += general/general.o
@@ -151,10 +160,14 @@ OBJS += graphics/3d/drawline3d.o
 OBJS += graphics/3d/drawpolygon3d.o
 OBJS += graphics/3d/drawtriangle3d.o
 OBJS += graphics/3d/camera.o
+OBJS += graphics/3d/light.o
+OBJS += graphics/3d/model.o
+OBJS += graphics/3d/pmdReader.o
+
 
 INCDIR = 
 CFLAGS = -G0 -Wall -O3# -save-temps # -pg
-CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
+CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti -fcheck-new
 ASFLAGS = $(CFLAGS)
 
 LIBDIR =
