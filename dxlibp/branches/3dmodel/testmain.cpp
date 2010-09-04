@@ -229,12 +229,10 @@ int main(int argc,char *argv[])
 
 	cModel model(1);
 	cModel miku("OreNoYome.pmd");
-	printfDx("%d\n", miku.Meshes->Buf[0].MicroMesh->Buf[0].VertexBuffer->Length);
-	printfDx("%d\n", miku.Meshes->Buf[0].MicroMesh->Buf[0].IndexBuffer->Length);
 
 	SetUseZBuffer3D(1);
 	SetWriteZBuffer3D(1);
-	float x = 50,y  = 200;
+	float x = 100,y  = 50;
 	float theta = 0;
 	while(ProcessMessage() != -1)
 	{

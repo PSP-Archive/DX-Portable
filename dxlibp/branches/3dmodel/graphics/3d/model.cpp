@@ -61,6 +61,11 @@ void cModel::Draw()
 				sceGumDrawArray(GU_TRIANGLES,SVERTEX_TYPE | GU_TRANSFORM_3D,mmesh.IndexBuffer->Length,mmesh.IndexBuffer->Buf,mmesh.VertexBuffer->Buf);
 			}
 			
+				printfDx("%d",mId);
+				ScreenFlip();
+				Sleep(1000);
+				ClearDrawScreen();
+				clsDx();
 		}
 	}
 }
@@ -160,10 +165,10 @@ int cModel::LoadMMD(const char* filename)
 			INT8 faceref;
 			if(PmdFaceToINT8(faceref,*pmd,pmd->face[j]) != 0)
 			{
-				//PmdDestruct(pmd);
+				PmdDestruct(pmd);
 				IsAvailable = false;
 				printfDx("‚ ‚ ‚ ‚ ‚ ‚ %d,%d,%d",i,j,faceId);
-				//return -1;
+				return -1;
 			}
 			bool exist = false;
 			for(std::vector<INT8>::iterator it = boneref.begin(),eit = boneref.end();it != eit;++it)
@@ -272,7 +277,7 @@ int cModel::LoadMMD(const char* filename)
 
 	PmdDestruct(pmd);
 	IsAvailable = true;
-	printfDx("mmd loaded!\n");
+	sceKernelDcacheWritebackAll();
 	return 0;
 }
 
