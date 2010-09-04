@@ -29,7 +29,7 @@ void cModel::Draw()
 	if(!IsAvailable || !Visible)return;
 
 
-	RenewBoneMatrix();
+//	RenewBoneMatrix();
 	GUSTART;
 	dxpGraphicsSetup3D(0xffffffff);
 	dxpGraphicsData.drawstate = DXP_DRAWSTATE_MODEL;
@@ -51,12 +51,13 @@ void cModel::Draw()
 			spc = material.SpecularColor;
 			ems = material.EmissiveColor;
 			dxpGuModelColor(ems,amb,dif,spc);
-			//Boneê›íË
 			for(int mmId = 0;mmId < mesh.MicroMesh->Length;++mmId)
 			{
+			//Boneê›íË
 				sMesh::sMicroMesh &mmesh = mesh.MicroMesh->Buf[mmId];
 				MATRIX ident = MGetIdent();
-				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,mmesh.BoneId[b] == -1 ? &ident.pspm : &Bones->Buf[mmesh.BoneId[b]].BoneMatrix.pspm);
+//				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,mmesh.BoneId[b] == -1 ? &ident.pspm : &Bones->Buf[mmesh.BoneId[b]].BoneMatrix.pspm);
+				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,&ident.pspm);
 				sceGumDrawArray(GU_TRIANGLES,SVERTEX_TYPE | GU_TRANSFORM_3D,mmesh.IndexBuffer->Length,mmesh.IndexBuffer->Buf,mmesh.VertexBuffer->Buf);
 			}
 			
@@ -66,6 +67,7 @@ void cModel::Draw()
 
 cModel::cModel(const char *filename)
 {
+	Visible = true;
 	IsAvailable = true;
 	if(LoadMMD(filename) == 0)return;
 	IsAvailable = false;
@@ -237,7 +239,6 @@ int cModel::LoadMMD(const char* filename)
 		}
 		faceId += (int)pmd->material[i].face_vert_count / 3;
 	}
-	printfDx("%p\n",Meshes->Buf[0].MicroMesh);
 	//É{Å[ÉìÇÃì«Ç›çûÇ›ÇÇ±Ç±Ç≈Ç‚ÇÈÅB
 	Bones = new tLinerBuffer<sBone>(pmd->boneNum);
 	//ptr check

@@ -217,6 +217,7 @@ void PmdDestruct(sPmdFile *pmd);
 
 int main(int argc,char *argv[])
 {
+	DxLib_Init();
 	sPmdFile *pmd = PmdPerse("OreNoYome.pmd");
 	if(pmd == NULL)
 	{
@@ -228,8 +229,9 @@ int main(int argc,char *argv[])
 
 	cModel model(1);
 	cModel miku("OreNoYome.pmd");
+	printfDx("%d\n", miku.Meshes->Buf[0].MicroMesh->Buf[0].VertexBuffer->Length);
+	printfDx("%d\n", miku.Meshes->Buf[0].MicroMesh->Buf[0].IndexBuffer->Length);
 
-	DxLib_Init();
 	SetUseZBuffer3D(1);
 	SetWriteZBuffer3D(1);
 	float x = 50,y  = 200;
@@ -255,7 +257,7 @@ int main(int argc,char *argv[])
 		mat.m[2][0] = 0;mat.m[2][1] = 0;mat.m[2][2] = 10;mat.m[2][3] = 0;
 		mat.m[3][0] = x;mat.m[3][1] = y;mat.m[3][2] = 0;mat.m[3][3] = 1;
 
-		mat = MMult(mat,mat2);
+//		mat = MMult(mat,mat2);
 
 
 		SetTransformToWorld(&mat);
@@ -292,7 +294,7 @@ int main(int argc,char *argv[])
 		sceGuEnable(GU_LIGHTING);
 		sceGuShadeModel(GU_SMOOTH);
 
-	//	model.Draw();
+		//model.Draw();
 		miku.Draw();
 
 		ScreenFlip();
