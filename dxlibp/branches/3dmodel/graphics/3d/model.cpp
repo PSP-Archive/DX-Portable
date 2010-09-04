@@ -139,7 +139,7 @@ int cModel::LoadMMD(const char* filename)
 	for(int i = 0;i < (int)pmd->materialNum;++i)
 	{
 		sMaterial &material = Materials->Buf[i];
-		sMesh mesh = Meshes->Buf[i];
+		sMesh &mesh = Meshes->Buf[i];
 
 		material.AmbientColor = (static_cast<int>(pmd->material[i].alpha * 255) & 0xff) << 24;material.AmbientColor 
 			|= ((static_cast<int>(pmd->material[i].mirror_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].mirror_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].mirror_color[0] * 255) & 0xff);
@@ -173,8 +173,13 @@ int cModel::LoadMMD(const char* filename)
 				boneref.push_back(faceref);
 			}
 		}
-		faceId += (int)pmd->material[i].face_vert_count / 3;
 		mesh.MicroMesh = new tLinerBuffer<sMesh::sMicroMesh>(boneref.size());
+		if(mesh.MicroMesh == NULL)
+		{
+			PmdDestruct(pmd);
+			printfDx("l182::i=%d",i);
+			return -1;
+		}
 		//ptr check
 		for(int j = 0,jend = boneref.size();j < jend;++j)
 		{
@@ -188,7 +193,7 @@ int cModel::LoadMMD(const char* filename)
 			mmesh.BoneId[6] = boneref[j].c;
 			mmesh.BoneId[7] = boneref[j].d;
 			std::vector<u16> rawindexbuf;
-			for(int k = 0;k < (int)pmd->faceNum;++k)
+			for(int k = faceId;k < faceId + pmd->material[i].face_vert_count / 3;++k)
 			{
 				INT8 faceref;
 				PmdFaceToINT8(faceref,*pmd,pmd->face[k]);
@@ -230,11 +235,12 @@ int cModel::LoadMMD(const char* filename)
 				mmesh.IndexBuffer->Buf[k] = l;
 			}
 		}
+		faceId += (int)pmd->material[i].face_vert_count / 3;
 	}
+	printfDx("%p\n",Meshes->Buf[0].MicroMesh);
 	//É{Å[ÉìÇÃì«Ç›çûÇ›ÇÇ±Ç±Ç≈Ç‚ÇÈÅB
 	Bones = new tLinerBuffer<sBone>(pmd->boneNum);
 	//ptr check
-	printfDx("!!\n");
 	
 	for(int i = 0;i < (int)pmd->boneNum;++i)
 	{
