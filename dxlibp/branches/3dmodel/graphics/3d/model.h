@@ -29,10 +29,10 @@ public://‚»‚Ì‚¤‚¿ŠO‚·public
 		tLinerBuffer(){}
 	};
 
-#define SVERTEX_TYPE (GU_WEIGHTS(4) | GU_WEIGHT_32BITF | GU_TEXTURE_32BITF | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_INDEX_16BIT)
+#define SVERTEX_TYPE (GU_WEIGHTS(8) | GU_WEIGHT_32BITF | GU_TEXTURE_32BITF | GU_NORMAL_32BITF | GU_VERTEX_32BITF | GU_INDEX_16BIT)
 	struct sVertex
 	{
-		float weight[4];
+		float weight[8];
 		float u,v;
 		float norm[3];
 		float pos[3];
@@ -72,12 +72,13 @@ public://‚»‚Ì‚¤‚¿ŠO‚·public
 		float EmissiveScale;
 		struct sMicroMesh
 		{
-			int BoneId[4];
+			int BoneId[8];
 			tLinerBuffer<u16> *IndexBuffer;
 			tLinerBuffer<sVertex> *VertexBuffer;
 			sMicroMesh()
 			{
-				BoneId[0] = -1;BoneId[1] = -1;BoneId[2] = -1;BoneId[3] = -1;
+				BoneId[3] = -1;BoneId[2] = -1;BoneId[1] = -1;BoneId[0] = -1;
+				BoneId[7] = -1;BoneId[6] = -1;BoneId[5] = -1;BoneId[4] = -1;
 				IndexBuffer = NULL;
 				VertexBuffer = NULL;
 			}

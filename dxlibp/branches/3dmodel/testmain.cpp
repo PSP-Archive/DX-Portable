@@ -6,6 +6,9 @@
 #include <malloc.h>
 #include <string.h>
 #include <pspgu.h>
+#include <math.h>
+#include "graphics/3d/model.h"
+#include "graphics/3d/light.h"
 
 PSP_MODULE_INFO("TEST",0,1,1);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
@@ -212,9 +215,6 @@ void PmdDestruct(sPmdFile *pmd);
 
 #endif
 
-#include "graphics/3d/model.h"
-#include "graphics/3d/light.h"
-
 int main(int argc,char *argv[])
 {
 	sPmdFile *pmd = PmdPerse("OreNoYome.pmd");
@@ -227,13 +227,18 @@ int main(int argc,char *argv[])
 	}
 
 	cModel model(1);
+	cModel miku("OreNoYome.pmd");
 
 	DxLib_Init();
 	SetUseZBuffer3D(1);
 	SetWriteZBuffer3D(1);
-	float x = 100,y  = 100;
+	float x = 50,y  = 200;
+	float theta = 0;
 	while(ProcessMessage() != -1)
 	{
+		theta += 0.03;
+		if(theta > 6.28)theta = 0;
+		model.Bones->Buf[0].Rotation = QGetRotX(theta);
 		if(GetInputState() & DXP_INPUT_UP)y += 2;
 		if(GetInputState() & DXP_INPUT_DOWN)y -= 2;
 		if(GetInputState() & DXP_INPUT_LEFT)x -= 2;
@@ -287,7 +292,8 @@ int main(int argc,char *argv[])
 		sceGuEnable(GU_LIGHTING);
 		sceGuShadeModel(GU_SMOOTH);
 
-		model.Draw();
+	//	model.Draw();
+		miku.Draw();
 
 		ScreenFlip();
 	}

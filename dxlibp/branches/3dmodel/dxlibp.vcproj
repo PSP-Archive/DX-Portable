@@ -50,11 +50,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\debug_\applogadd.c"
+				RelativePath=".\debug\applogadd.c"
 				>
 			</File>
 			<File
-				RelativePath=".\debug\applogadd.c"
+				RelativePath=".\debug_\applogadd.c"
 				>
 			</File>
 			<File
@@ -418,15 +418,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\debug\printfdx.c"
-				>
-			</File>
-			<File
 				RelativePath=".\debug_\printfdx.c"
 				>
 			</File>
 			<File
+				RelativePath=".\debug\printfdx.c"
+				>
+			</File>
+			<File
 				RelativePath=".\general\processmessage.c"
+				>
+			</File>
+			<File
+				RelativePath=".\math\quaternion.c"
 				>
 			</File>
 			<File

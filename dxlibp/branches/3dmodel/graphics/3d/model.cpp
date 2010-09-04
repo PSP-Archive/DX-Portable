@@ -3,8 +3,10 @@ extern "C"
 #include "../../graphics.h"
 #include "pmdReader.h" //どんどん変なものが追加されてます
 }
+
 #include "light.h"
 #include "model.h"
+#include <algorithm>
 #ifndef DXP_BUILDOPTION_NO3D
 extern "C"
 {
@@ -54,7 +56,7 @@ void cModel::Draw()
 			{
 				sMesh::sMicroMesh &mmesh = mesh.MicroMesh->Buf[mmId];
 				MATRIX ident = MGetIdent();
-				for(int b = 0;b < 4;++b)sceGuBoneMatrix(b,mmesh.BoneId[b] == -1 ? &ident.pspm : &Bones->Buf[mmesh.BoneId[b]].BoneMatrix.pspm);
+				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,mmesh.BoneId[b] == -1 ? &ident.pspm : &Bones->Buf[mmesh.BoneId[b]].BoneMatrix.pspm);
 				sceGumDrawArray(GU_TRIANGLES,SVERTEX_TYPE | GU_TRANSFORM_3D,mmesh.IndexBuffer->Length,mmesh.IndexBuffer->Buf,mmesh.VertexBuffer->Buf);
 			}
 			
@@ -69,113 +71,202 @@ cModel::cModel(const char *filename)
 	IsAvailable = false;
 }
 
+struct INT8
+{
+	int x,y,z,w,a,b,c,d;
+	INT8()
+	{
+		w = z = y = x = -1;
+		d = c = b = a = -1;
+	}
+	bool operator ==(const INT8& r){if(x != r.x ||y != r.y ||z != r.z ||w != r.w || a != r.a || b != r.b ||c != r.c||d != r.d)return false;return true;}
+	void Sort()
+	{
+		while(x < y || y < z || z < w || w < a || a < b || b < c || c < d)
+		{
+			if(x < y){int t = x;x = y;y = t;}
+			if(y < z){int t = y;y = z;z = t;}
+			if(z < w){int t = z;z = w;w = t;}
+			if(w < a){int t = w;w = a;a = t;}
+			if(a < b){int t = a;a = b;b = t;}
+			if(b < c){int t = b;b = c;c = t;}
+			if(c < d){int t = c;c = d;d = t;}
+		}
+	}
+};
+
+int PmdFaceToINT8(INT8 &faceref,const sPmdFile &pmd, const sPmdFace &pface)
+{
+	faceref.w = faceref.z = faceref.y = faceref.x = -1;
+	faceref.d = faceref.c = faceref.b = faceref.a = -1;
+	for(int i = 0;i < 3;++i)
+	{
+		for(int j = 0;j < 2;++j)
+		{
+			int a = pmd.vertex[pface.vertexIndex[i]].bone_num[j];
+			if(faceref.x != a && faceref.y != a && faceref.z != a && faceref.w != a && faceref.a != a && faceref.b != a && faceref.c != a && faceref.d != a )
+			{
+				if(faceref.x == -1)faceref.x = a;
+				else if(faceref.y == -1)faceref.y = a;
+				else if(faceref.z == -1)faceref.z = a;
+				else if(faceref.w == -1)faceref.w = a;
+				else if(faceref.a == -1)faceref.a = a;
+				else if(faceref.b == -1)faceref.b = a;
+				else if(faceref.c == -1)faceref.c = a;
+				else if(faceref.d == -1)faceref.d = a;
+				else return -1;
+			}
+		}
+	}
+	faceref.Sort();
+	return 0;
+}
+
 int cModel::LoadMMD(const char* filename)
 {
-	return -1;
-//	sPmdFile *pmd = PmdPerse(filename);
-//	if(pmd == NULL)return -1;
-//	//この手の異種データのすりあわせが一番めんどくさい気がします。
-//	//頂点
-//	//Vertices = new tLinerBuffer<sVertex>(pmd->vertexNum);
-//	/*
-//		MeshをMicroMeshに分けつつ頂点リストとインデックスバッファを再構築。
-//		baseフレーム→マテリアル毎のメッシュ→ボーン毎のマイクロメッシュ（頂点バッファとインデックスバッファを持つ）
-//	*/
-//	{//baseフレームの作成
-//		sFrame frame_;
-//		Frames.push_back(frame);
-//	}
-//
-//	for(int i = 0;i < pmd->materialNum;++i)
-//	{
-//		sMaterial material;
-//		material.AmbientColor = (static_cast<int>(pmd->material[i].alpha * 255) & 0xff) << 24;material.AmbientColor 
-//			|= ((static_cast<int>(pmd->material[i].mirror_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].mirror_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].mirror_color[0] * 255) & 0xff);
-//		material.DiffuseColor = ((static_cast<int>(pmd->material[i].diffuse_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].diffuse_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].diffuse_color[0] * 255) & 0xff);
-//		material.EmissiveColor = 0;
-//		material.SpecularColor = ((static_cast<int>(pmd->material[i].specular_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].specular_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].specular_color[0] * 255) & 0xff);
-//		material.SpecularPower = pmd->material[i].specularity;
-//		Materials.push_back(material);
-//		sMesh mesh;
-//		mesh.FrameId = 0;
-//		mesh.MaterialId = i;
-//		{//MicroMeshへの切り分け。
-//			//参照ボーンのリストアップ
-//			
-//
-//			//グループ分け
-//			//頂点リスト、インデックスバッファ再構築
-//			//登録
-//		}
-//		Meshes.push_back(mesh);
-//		Frames[0].MeshList.push_back(i);
-//	}
-//
-//
-//
-////	if(Vertices == NULL);//例外機構は無効になってるのでNULLチェック。何するかは後で考える
-//	for(int i = 0;i < pmd->vertexNum;++i)
-//	{
-//		Vertices->Buf[i].pos[0] = pmd->vertex[i].pos[0];
-//		Vertices->Buf[i].pos[1] = pmd->vertex[i].pos[1];
-//		Vertices->Buf[i].pos[2] = pmd->vertex[i].pos[2];
-//		Vertices->Buf[i].norm[0] = pmd->vertex[i].normal_vec[0];
-//		Vertices->Buf[i].norm[1] = pmd->vertex[i].normal_vec[1];
-//		Vertices->Buf[i].norm[2] = pmd->vertex[i].normal_vec[2];
-//		Vertices->Buf[i].u = pmd->vertex[i].uv[0];
-//		Vertices->Buf[i].v = pmd->vertex[i].uv[1];
-//		Vertices->Buf[i].weight[0] = pmd->vertex[i].bone_weight / 100.0f;//ほんとは0-1の範囲に収まってるかチェックするんだけど後回し
-//		Vertices->Buf[i].weight[1] = 1.0f - (pmd->vertex[i].bone_weight / 100.0f);
-//		Vertices->Buf[i].weight[2] = 0.0f;
-//		Vertices->Buf[i].weight[3] = 0.0f;
-//	}
-//	//マテリアル
-//	for(int i = 0;i < pmd->materialNum;++i)
-//	{
-//		sMaterial material;
-//		material.AmbientColor = (static_cast<int>(pmd->material[i].alpha * 255) & 0xff) << 24;material.AmbientColor 
-//			|= ((static_cast<int>(pmd->material[i].mirror_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].mirror_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].mirror_color[0] * 255) & 0xff);
-//		material.DiffuseColor = ((static_cast<int>(pmd->material[i].diffuse_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].diffuse_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].diffuse_color[0] * 255) & 0xff);
-//		material.EmissiveColor = 0;
-//		material.SpecularColor = ((static_cast<int>(pmd->material[i].specular_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].specular_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].specular_color[0] * 255) & 0xff);
-//		material.SpecularPower = pmd->material[i].specularity;
-//		Materials.push_back(material);
-//	}
-//	//フレーム　MMDにフレームなんてあるのだらうか　・・・あ、そういえばメッシュがグループ別になってたっけ
-//	//マテリアルの数だけ最初のフレームに突っ込む。
-//	int faceCnt = 0;
-//	int boneRef[4];
-//	for(int i = 0;pmd->material;++i)
-//	{
-//		boneRef[0] = boneRef[1] = boneRef[2] = boneRef[3] = -1;
-//		sMesh mesh;
-//		mesh.FrameId = 0;
-//		
-//		mesh.IndexBuffer = new tLinerBuffer<u16>(pmd->material[i].face_vert_count);
-//		for(int j = 0;j < mesh.IndexBuffer->Length / 3;++j)
-//		{
-//			mesh.IndexBuffer->Buf[j * 3 + 0] = pmd->face[faceCnt].vertexIndex[0];
-//			mesh.IndexBuffer->Buf[j * 3 + 1] = pmd->face[faceCnt].vertexIndex[1];
-//			mesh.IndexBuffer->Buf[j * 3 + 2] = pmd->face[faceCnt].vertexIndex[2];
-////ボーン検出
-//			pmd->vertex[mesh.IndexBuffer->Buf[j * 3 + 0]].bone_num[0];
-//			pmd->vertex[mesh.IndexBuffer->Buf[j * 3 + 0]].bone_num[1];
-//			pmd->vertex[mesh.IndexBuffer->Buf[j * 3 + 1]].bone_num[0];
-//			pmd->vertex[mesh.IndexBuffer->Buf[j * 3 + 1]].bone_num[1];
-//			pmd->vertex[mesh.IndexBuffer->Buf[j * 3 + 2]].bone_num[0];
-//			pmd->vertex[mesh.IndexBuffer->Buf[j * 3 + 2]].bone_num[1];
-////３つ以上のボーンが１つのメッシュで参照されてると、頂点リスト側を変更しないといけないのでめんどっちい。
-//			++faceCnt;
-//			if(faceCnt >= pmd->faceNum);//えらー
-//		}
-//		mesh.MaterialId = i;
-//		mesh.Visible = true;
-//	}
-//	//後はスキン種別ごとにフレーム作る。
-//
-//	//メッシュ　ボーン参照数が多かったらアウト！
-//	PmdDestruct(pmd);
-//	return 0;
+	sPmdFile *pmd = PmdPerse(filename);	if(pmd == NULL)return -1;
+	//必要フレーム数見積もり
+	//とりあえずボディーだけいきます。
+	Frames = new tLinerBuffer<sFrame>(1);
+	//要チェック
+	sFrame &frame = Frames->Buf[0];
+	for(int i = 0;i < (int)pmd->materialNum;++i)frame.MeshList.push_back(i);
+
+	Materials = new tLinerBuffer<sMaterial>(pmd->materialNum);
+	Meshes = new tLinerBuffer<sMesh>(pmd->materialNum);
+	//ptr check!
+	int faceId = 0;
+	for(int i = 0;i < (int)pmd->materialNum;++i)
+	{
+		sMaterial &material = Materials->Buf[i];
+		sMesh mesh = Meshes->Buf[i];
+
+		material.AmbientColor = (static_cast<int>(pmd->material[i].alpha * 255) & 0xff) << 24;material.AmbientColor 
+			|= ((static_cast<int>(pmd->material[i].mirror_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].mirror_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].mirror_color[0] * 255) & 0xff);
+		material.DiffuseColor = ((static_cast<int>(pmd->material[i].diffuse_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].diffuse_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].diffuse_color[0] * 255) & 0xff);
+		material.EmissiveColor = 0;
+		material.SpecularColor = ((static_cast<int>(pmd->material[i].specular_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].specular_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].specular_color[0] * 255) & 0xff);
+		material.SpecularPower = pmd->material[i].specularity;
+
+		mesh.FrameId = 0;
+		mesh.MaterialId = i;
+		//ここからメッシュデータの再構築をします！
+		//まずはメッシュに含まれる参照ボーンを調査。ここはSTL使おうかな
+		std::vector<INT8> boneref;
+		for(int j = faceId;j < faceId + (int)pmd->material[i].face_vert_count / 3;++j)
+		{
+			INT8 faceref;
+			if(PmdFaceToINT8(faceref,*pmd,pmd->face[j]) != 0)
+			{
+				//PmdDestruct(pmd);
+				IsAvailable = false;
+				printfDx("ああああああ%d,%d,%d",i,j,faceId);
+				//return -1;
+			}
+			bool exist = false;
+			for(std::vector<INT8>::iterator it = boneref.begin(),eit = boneref.end();it != eit;++it)
+			{
+				if((*it) == faceref){exist = true;break;}
+			}
+			if(!exist)
+			{
+				boneref.push_back(faceref);
+			}
+		}
+		faceId += (int)pmd->material[i].face_vert_count / 3;
+		mesh.MicroMesh = new tLinerBuffer<sMesh::sMicroMesh>(boneref.size());
+		//ptr check
+		for(int j = 0,jend = boneref.size();j < jend;++j)
+		{
+			sMesh::sMicroMesh &mmesh = mesh.MicroMesh->Buf[j];
+			mmesh.BoneId[0] = boneref[j].x;
+			mmesh.BoneId[1] = boneref[j].y;
+			mmesh.BoneId[2] = boneref[j].z;
+			mmesh.BoneId[3] = boneref[j].w;
+			mmesh.BoneId[4] = boneref[j].a;
+			mmesh.BoneId[5] = boneref[j].b;
+			mmesh.BoneId[6] = boneref[j].c;
+			mmesh.BoneId[7] = boneref[j].d;
+			std::vector<u16> rawindexbuf;
+			for(int k = 0;k < (int)pmd->faceNum;++k)
+			{
+				INT8 faceref;
+				PmdFaceToINT8(faceref,*pmd,pmd->face[k]);
+				if(boneref[j] == faceref)
+				{
+					rawindexbuf.push_back(pmd->face[k].vertexIndex[0]);
+					rawindexbuf.push_back(pmd->face[k].vertexIndex[1]);
+					rawindexbuf.push_back(pmd->face[k].vertexIndex[2]);
+				}
+			}
+			std::vector<u16> sortedindex = rawindexbuf;
+			std::sort(sortedindex.begin(),sortedindex.end());
+			sortedindex.erase(std::unique(sortedindex.begin(),sortedindex.end()),sortedindex.end());
+
+			mmesh.IndexBuffer = new tLinerBuffer<u16>(rawindexbuf.size());
+			mmesh.VertexBuffer = new tLinerBuffer<sVertex>(sortedindex.size());
+			//とりま、頂点リストからいこうか
+			for(int k = 0,kend = sortedindex.size();k < kend;++k)
+			{
+				sVertex &v = mmesh.VertexBuffer->Buf[k];
+				sPmdVertex &pv = pmd->vertex[(int)sortedindex[k]];
+				v.u = pv.uv[0];v.v = pv.uv[1];
+				v.pos[0] = pv.pos[0];v.pos[1] = pv.pos[1];v.pos[2] = pv.pos[2];
+				v.norm[0] = pv.normal_vec[0];v.norm[1] = pv.normal_vec[1];v.norm[2] = pv.normal_vec[2];
+				for(int l = 0;l < 8;++l)
+				{
+					v.weight[l] = 0.0f;
+					if(mmesh.BoneId[l] == pv.bone_num[0])
+						v.weight[l] = pv.bone_weight / 100.0f;
+					if(mmesh.BoneId[l] == pv.bone_num[1])
+						v.weight[l] = 1.0f - pv.bone_weight / 100.0f;
+				}
+			}
+			for(int k = 0,kend = rawindexbuf.size();k < kend;++k)
+			{
+				int l,lend = sortedindex.size();
+				for(l = 0;l < lend;++l)
+					if(sortedindex[l] == rawindexbuf[k])break;
+				mmesh.IndexBuffer->Buf[k] = l;
+			}
+		}
+	}
+	//ボーンの読み込みをここでやる。
+	Bones = new tLinerBuffer<sBone>(pmd->boneNum);
+	//ptr check
+	printfDx("!!\n");
+	
+	for(int i = 0;i < (int)pmd->boneNum;++i)
+	{
+		sBone &bone = Bones->Buf[i];
+		sPmdBone &pbone = pmd->bone[i];
+		bone.Rotation = QGetIdent();
+		bone.Position.x = pbone.bone_head_pos[0];
+		bone.Position.y = pbone.bone_head_pos[1];
+		bone.Position.z = pbone.bone_head_pos[2];
+		if(pbone.parent_bone_index != 0xffff)
+			bone.ParentBoneId = pbone.parent_bone_index;
+		if(pbone.tail_pos_bone_index != 0xffff)
+			bone.ChildBoneId = pbone.tail_pos_bone_index;
+		//NextBrotherIdは次のループで作る。
+	}
+	for(int i = 0;i < pmd->boneNum;++i)
+	{
+		std::vector<int> brothers;
+		for(int j = 0;j < pmd->boneNum;++j)
+		{
+			if(Bones->Buf[j].ParentBoneId == i)brothers.push_back(j);
+		}
+		if(brothers.size() <= 0)continue;
+		for(int j = 0;j < (int)brothers.size() - 1;++j)
+			Bones->Buf[brothers[j]].NextBrotherId = brothers[j + 1];
+		Bones->Buf[i].ChildBoneId = brothers[0];
+	}
+
+	PmdDestruct(pmd);
+	IsAvailable = true;
+	printfDx("mmd loaded!\n");
+	return 0;
 }
 
 void cModel::RenewBoneMatrix()

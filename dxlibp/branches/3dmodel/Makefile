@@ -58,8 +58,9 @@ OBJS += input/gethitkeystateall.o
 
 #math functions
 #dxlibp.hに内容をinline化して移してあります。コード保守のために遺してあるソースなので消さないでください。
-#OBJS += math/vector.c
-#OBJS += math/matrix.c
+#OBJS += math/vector.o
+#OBJS += math/matrix.o
+OBJS += math/quaternion.o
 
 #graphics functions
 OBJS += graphics/drawline.o
