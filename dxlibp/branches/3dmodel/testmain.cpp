@@ -228,7 +228,25 @@ int main(int argc,char *argv[])
 	}
 
 	cModel model(1);
-	cModel miku("OreNoYome.pmd");
+	cModel miku("OreNoYome.pmd");//1-32,33,34
+
+	//for(int i = 0;i < miku.Meshes->Buf[1].MicroMesh->Buf[33].VertexBuffer->Length;++i)
+	//{
+	//	cModel::sVertex &v = miku.Meshes->Buf[1].MicroMesh->Buf[33].VertexBuffer->Buf[i];
+	//	printfDx("(%f,%f,%f),",v.pos[0],v.pos[1],v.pos[2]);
+	//}
+	//printfDx("\n");
+	//for(int i = 0;i < miku.Meshes->Buf[1].MicroMesh->Buf[33].IndexBuffer->Length / 3;++i)
+	//{
+	//	u16 *idx = miku.Meshes->Buf[1].MicroMesh->Buf[33].IndexBuffer->Buf + i * 3;
+	//	printfDx("(%d,%d,%d),",(int)idx[0],(int)idx[1],(int)idx[2]);
+	//}
+
+
+
+
+
+
 
 	SetUseZBuffer3D(1);
 	SetWriteZBuffer3D(1);
