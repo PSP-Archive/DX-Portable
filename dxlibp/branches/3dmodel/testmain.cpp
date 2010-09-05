@@ -215,6 +215,15 @@ void PmdDestruct(sPmdFile *pmd);
 
 #endif
 
+float fps()
+{
+	static int prev = 0;
+	int current = GetNowCount();
+	float result = 1000.0f / (current - prev);
+	prev = current;
+	return result;
+}
+
 int main(int argc,char *argv[])
 {
 	DxLib_Init();
@@ -247,7 +256,6 @@ int main(int argc,char *argv[])
 
 
 
-
 	SetUseZBuffer3D(1);
 	SetWriteZBuffer3D(1);
 	float x = 100,y  = 50;
@@ -262,6 +270,7 @@ int main(int argc,char *argv[])
 		if(GetInputState() & DXP_INPUT_LEFT)x -= 2;
 		if(GetInputState() & DXP_INPUT_RIGHT)x += 2;
 
+		miku.Bones->Buf[1].Rotation = QGetRotY(theta);
 
 
 		MATRIX mat,mat2;
@@ -279,6 +288,8 @@ int main(int argc,char *argv[])
 		SetTransformToWorld(&mat);
 
 		ClearDrawScreen();
+		clsDx();
+		printfDx("fps::%f\n",fps());
 //		clsDx();
 		//int mId = 0;
 		//int m = 0;

@@ -29,7 +29,7 @@ void cModel::Draw()
 	if(!IsAvailable || !Visible)return;
 
 
-//	RenewBoneMatrix();
+	RenewBoneMatrix();
 	GUSTART;
 	dxpGraphicsSetup3D(0xffffffff);
 	dxpGraphicsData.drawstate = DXP_DRAWSTATE_MODEL;
@@ -61,8 +61,8 @@ void cModel::Draw()
 				//clsDx();
 				sMesh::sMicroMesh &mmesh = mesh.MicroMesh->Buf[mmId];
 				MATRIX ident = MGetIdent();
-//				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,mmesh.BoneId[b] == -1 ? &ident.pspm : &Bones->Buf[mmesh.BoneId[b]].BoneMatrix.pspm);
-				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,&ident.pspm);
+				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,mmesh.BoneId[b] == -1 ? &ident.pspm : &Bones->Buf[mmesh.BoneId[b]].BoneMatrix.pspm);
+//				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,&ident.pspm);
 				sceGumDrawArray(GU_TRIANGLES,SVERTEX_TYPE | GU_TRANSFORM_3D,mmesh.IndexBuffer->Length,mmesh.IndexBuffer->Buf,mmesh.VertexBuffer->Buf);
 			}
 			
@@ -255,35 +255,34 @@ int cModel::LoadMMD(const char* filename)
 		faceId += (int)pmd->material[i].face_vert_count / 3;
 	}
 	////ボーンの読み込みをここでやる。
-	//Bones = new tLinerBuffer<sBone>(pmd->boneNum);
+	Bones = new tLinerBuffer<sBone>(pmd->boneNum);
 	////ptr check
 	//
-	//for(int i = 0;i < (int)pmd->boneNum;++i)
-	//{
-	//	sBone &bone = Bones->Buf[i];
-	//	sPmdBone &pbone = pmd->bone[i];
-	//	bone.Rotation = QGetIdent();
-	//	bone.Position.x = pbone.bone_head_pos[0];
-	//	bone.Position.y = pbone.bone_head_pos[1];
-	//	bone.Position.z = pbone.bone_head_pos[2];
-	//	if(pbone.parent_bone_index != 0xffff)
-	//		bone.ParentBoneId = pbone.parent_bone_index;
-	//	if(pbone.tail_pos_bone_index != 0xffff)
-	//		bone.ChildBoneId = pbone.tail_pos_bone_index;
-	//	//NextBrotherIdは次のループで作る。
-	//}
-	//for(int i = 0;i < pmd->boneNum;++i)
-	//{
-	//	std::vector<int> brothers;
-	//	for(int j = 0;j < pmd->boneNum;++j)
-	//	{
-	//		if(Bones->Buf[j].ParentBoneId == i)brothers.push_back(j);
-	//	}
-	//	if(brothers.size() <= 0)continue;
-	//	for(int j = 0;j < (int)brothers.size() - 1;++j)
-	//		Bones->Buf[brothers[j]].NextBrotherId = brothers[j + 1];
-	//	Bones->Buf[i].ChildBoneId = brothers[0];
-	//}
+	for(int i = 0;i < (int)pmd->boneNum;++i)
+	{
+		sBone &bone = Bones->Buf[i];
+		sPmdBone &pbone = pmd->bone[i];
+		bone.Rotation = QGetIdent();
+		bone.Position.x = pbone.bone_head_pos[0];
+		bone.Position.y = pbone.bone_head_pos[1];
+		bone.Position.z = pbone.bone_head_pos[2];
+		if(pbone.parent_bone_index != 0xffff)
+			bone.ParentBoneId = pbone.parent_bone_index;
+		else bone.ParentBoneId = -1;
+		//NextBrotherIdは次のループで作る。
+	}
+	for(int i = 0;i < pmd->boneNum;++i)
+	{
+		std::vector<int> brothers;
+		for(int j = 0;j < pmd->boneNum;++j)
+		{
+			if(Bones->Buf[j].ParentBoneId == i)brothers.push_back(j);
+		}
+		if(brothers.size() <= 0)continue;
+		for(int j = 0;j < (int)brothers.size() - 1;++j)
+			Bones->Buf[brothers[j]].NextBrotherId = brothers[j + 1];
+		Bones->Buf[i].ChildBoneId = brothers.size() != 0 ? brothers[0] : -1;
+	}
 
 	PmdDestruct(pmd);
 	IsAvailable = true;
