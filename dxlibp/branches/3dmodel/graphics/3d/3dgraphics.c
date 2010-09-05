@@ -24,12 +24,12 @@ int dxpGraphicsSetup3DTex(DXPGRAPHICSHANDLE *gptr,int flag)
 			sceGuTexFilter(GU_LINEAR,GU_LINEAR);
 		else
 			sceGuTexFilter(GU_NEAREST,GU_NEAREST);
-		if(dxpGraphicsData.usedepth)
+		if(dxpGraphicsData.usedepth3d)
 		{
 			GUENABLE(GU_DEPTH_TEST);
 			sceGuDepthFunc(dxpGraphicsData.depthfunc);
 			sceGuDepthBuffer(dxpGraphicsData.depthbuffer.texvram,512);	//深度バッファを有効にするときでいい
-			if(dxpGraphicsData.writedepth)sceGuDepthMask(0);
+			if(dxpGraphicsData.writedepth3d)sceGuDepthMask(0);
 			else sceGuDepthMask(1);
 		}
 		else GUDISABLE(GU_DEPTH_TEST);

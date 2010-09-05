@@ -260,8 +260,11 @@ int main(int argc,char *argv[])
 	SetWriteZBuffer3D(1);
 	float x = 100,y  = 50;
 	float theta = 0;
+	float hijiT = 0;
+	
 	while(ProcessMessage() != -1)
 	{
+		hijiT += 0.1;
 		theta += 0.03;
 		if(theta > 6.28)theta = 0;
 		model.Bones->Buf[0].Rotation = QGetRotX(theta);
@@ -270,16 +273,22 @@ int main(int argc,char *argv[])
 		if(GetInputState() & DXP_INPUT_LEFT)x -= 2;
 		if(GetInputState() & DXP_INPUT_RIGHT)x += 2;
 
-		miku.Bones->Buf[1].Rotation = QGetRotY(theta);
+		
+//		miku.Bones->Buf[1].Rotation = QGetRotY(theta);
+		
+
+		miku.Bones->Buf[49].Rotation = QMult(QGetRotX(1.35 - 0.85 * sin(hijiT)),QGetRotY(-1.55 - 0.7 * sin(hijiT)));//‰E‚Ð‚¶
+
+//		miku.Bones->Buf[47].Rotation = QGetRotX(theta);//‰EŒ¨
 
 
 		MATRIX mat,mat2;
 
 		mat2 =MGetRotX(3.14159265358979f / 2);
 
-		mat.m[0][0] = 10;mat.m[0][1] = 0;mat.m[0][2] = 0;mat.m[0][3] = 0;
-		mat.m[1][0] = 0;mat.m[1][1] = 10;mat.m[1][2] = 0;mat.m[1][3] = 0;
-		mat.m[2][0] = 0;mat.m[2][1] = 0;mat.m[2][2] = 10;mat.m[2][3] = 0;
+		mat.m[0][0] = 20;mat.m[0][1] = 0;mat.m[0][2] = 0;mat.m[0][3] = 0;
+		mat.m[1][0] = 0;mat.m[1][1] = 20;mat.m[1][2] = 0;mat.m[1][3] = 0;
+		mat.m[2][0] = 0;mat.m[2][1] = 0;mat.m[2][2] = 20;mat.m[2][3] = 0;
 		mat.m[3][0] = x;mat.m[3][1] = y;mat.m[3][2] = 0;mat.m[3][3] = 1;
 
 //		mat = MMult(mat,mat2);

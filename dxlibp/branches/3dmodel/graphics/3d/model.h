@@ -3,6 +3,10 @@
 #include <new>
 #include <vector>
 #include <map>
+extern "C"
+{
+#include "../../dxlibp.h"
+}
 class cModel
 {
 private:
@@ -45,6 +49,17 @@ public://そのうち外すpublic
 		u32 AmbientColor;
 		u32 DiffuseColor;
 		u32 SpecularColor;
+		int TextureHandle;
+		sMaterial()
+		{
+			TextureHandle = -1;
+			SpecularPower = 0.0f;
+			SpecularColor = AmbientColor = EmissiveColor = 0xffffffff;
+		}
+		~sMaterial()
+		{
+			DeleteGraph(TextureHandle);
+		}
 	};
 
 	struct sBone//二分木で管理する予定だったけど、とりあえず配列に突っ込んでから考えることにしたｗ
@@ -135,6 +150,7 @@ public://そのうち外すpublic
 	void RenewBoneMatrix();
 	void RenewBoneMatrixHelper(int id);
 	int LoadMMD(const char* filename);
+	void MaterialSetup(int materialId);
 public:
 	void Draw();
 	cModel(const char* filename);

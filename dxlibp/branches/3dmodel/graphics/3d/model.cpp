@@ -31,8 +31,7 @@ void cModel::Draw()
 
 	RenewBoneMatrix();
 	GUSTART;
-	dxpGraphicsSetup3D(0xffffffff);
-	dxpGraphicsData.drawstate = DXP_DRAWSTATE_MODEL;
+	sceKernelDcacheWritebackAll();
 	for(int fId = 0;fId < Frames->Length;++fId)
 	{
 		sFrame &frame = Frames->Buf[fId];
@@ -42,30 +41,17 @@ void cModel::Draw()
 			sMesh& mesh = Meshes->Buf[mId];
 			if(!mesh.Visible)continue;
 			//マテリアル設定
-			//テクスチャの設定も今はいいや
-			sceGuDisable(GU_TEXTURE_2D);
-			sMaterial &material = Materials->Buf[mesh.MaterialId];
-			u32 amb,dif,spc,ems;//この辺あとでフレームやメッシュからの数値を計算するように変更
-			amb = material.AmbientColor;
-			dif = material.DiffuseColor;
-			spc = material.SpecularColor;
-			ems = material.EmissiveColor;
-			dxpGuModelColor(ems,amb,dif,spc);
+			MaterialSetup(mId);
 			for(int mmId = 0;mmId < mesh.MicroMesh->Length;++mmId)
 			{
-			//Bone設定
-				//printfDx("%d",mmId);
-				//ScreenFlip();
-				//Sleep(1000);
-				//ClearDrawScreen();
-				//clsDx();
+				//Bone設定
 				sMesh::sMicroMesh &mmesh = mesh.MicroMesh->Buf[mmId];
 				MATRIX ident = MGetIdent();
 				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,mmesh.BoneId[b] == -1 ? &ident.pspm : &Bones->Buf[mmesh.BoneId[b]].BoneMatrix.pspm);
-//				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,&ident.pspm);
+				//				for(int b = 0;b < 8;++b)sceGuBoneMatrix(b,&ident.pspm);
 				sceGumDrawArray(GU_TRIANGLES,SVERTEX_TYPE | GU_TRANSFORM_3D,mmesh.IndexBuffer->Length,mmesh.IndexBuffer->Buf,mmesh.VertexBuffer->Buf);
 			}
-			
+
 		}
 	}
 }
@@ -159,6 +145,8 @@ int cModel::LoadMMD(const char* filename)
 		material.EmissiveColor = 0;
 		material.SpecularColor = ((static_cast<int>(pmd->material[i].specular_color[2] * 255) & 0xff) << 16) | ((static_cast<int>(pmd->material[i].specular_color[1] * 255) & 0xff) << 8) | (static_cast<int>(pmd->material[i].specular_color[0] * 255) & 0xff);
 		material.SpecularPower = pmd->material[i].specularity;
+		if(pmd->material[i].texture_file_name[0] != '\0')
+			material.TextureHandle = LoadGraph(pmd->material[i].texture_file_name);
 
 		mesh.FrameId = 0;
 		mesh.MaterialId = i;
@@ -455,9 +443,122 @@ cModel::~cModel()
 	delete Frames;
 }
 
+void cModel::MaterialSetup(int materialId)
+{
+	sMaterial &material = Materials->Buf[materialId];
+	dxpGraphicsData.drawstate = DXP_DRAWSTATE_MODEL;
+	dxpGraphicsData.forceupdate = 1;
+	GUSTART;
+	//描画モード設定
+	if(dxpGraphicsData.bilinear_enable)
+		sceGuTexFilter(GU_LINEAR,GU_LINEAR);
+	else
+		sceGuTexFilter(GU_NEAREST,GU_NEAREST);
+	//深度バッファ設定
+	if(dxpGraphicsData.usedepth3d)
+	{
+		GUENABLE(GU_DEPTH_TEST);
+		sceGuDepthFunc(dxpGraphicsData.depthfunc);
+		sceGuDepthBuffer(dxpGraphicsData.depthbuffer.texvram,512);	//深度バッファを有効にするときでいい
+		if(dxpGraphicsData.writedepth3d)sceGuDepthMask(0);
+		else sceGuDepthMask(1);
+	}
+	else GUDISABLE(GU_DEPTH_TEST);
+	//テクスチャ設定
+	DXPTEXTURE3 *texptr = NULL;
+	DXPGRAPHICSHANDLE *gptr = NULL;
+	if(material.TextureHandle == -1)
+		texptr = NULL;
+	else
+	{
+		gptr = dxpGraphicsData.grapharray[material.TextureHandle];
+		if(gptr != NULL)
+			texptr = gptr->tex;
+	}
+
+	if(texptr == NULL)
+	{
+		GUDISABLE(GU_TEXTURE_2D);
+	}
+	else
+	{
+		GUENABLE(GU_TEXTURE_2D);
+		if(texptr->ppalette != NULL)
+		{
+			sceGuClutMode(GU_PSM_8888,0,0xff,0);
+			sceGuClutLoad(texptr->psm == GU_PSM_T4 ? 2 : 32,texptr->ppalette);
+		}
+		sceGuTexMode(texptr->psm,0,0,texptr->swizzledflag);
+		sceGuTexImage(0,texptr->width,texptr->height,texptr->pitch,texptr->texvram ? texptr->texvram : texptr->texdata);
+		dxpGraphicsData.texture = texptr;
+		if(texptr != &dxpGraphicsData.displaybuffer[0] && texptr != &dxpGraphicsData.displaybuffer[1])texptr->reloadflag = 0;
+		sceGuTexOffset((float)gptr->u0 / (float)texptr->width,(float)gptr->v0 / (float)texptr->height);
+		sceGuTexScale((float)(gptr->u1 - gptr->u0) / (float)texptr->width,(float)(gptr->v1 - gptr->v0) / (float)texptr->height);
+	}
+
+	GUDISABLE(GU_COLOR_TEST);
+
+	GUDISABLE(GU_BLEND);
+	//GUENABLE(GU_BLEND);
+
+	//int blendMode = DX_BLENDMODE_ADD;
+	//int blendParam = 255;
+
+	//int op;
+	//int src,dest;
+	//unsigned int srcfix;
+	//unsigned int destfix;	 
+	//switch(blendMode)
+	//{
+	//case DX_BLENDMODE_ADD:
+	//	op = GU_ADD;
+	//	src = GU_SRC_ALPHA;
+	//	dest = GU_FIX;
+	//	srcfix = 0xffffffff;
+	//	destfix = 0xffffffff;
+	//	break;
+	//case DX_BLENDMODE_SUB:
+	//	op = GU_REVERSE_SUBTRACT;
+	//	src = GU_SRC_ALPHA;
+	//	dest = GU_FIX;
+	//	srcfix = 0xffffffff;
+	//	destfix = 0xffffffff;
+	//	break;
+	//case DX_BLENDMODE_ALPHA:
+	//default:
+	//	op = GU_ADD;
+	//	src = GU_SRC_ALPHA;
+	//	dest = GU_ONE_MINUS_SRC_ALPHA;
+	//	srcfix = 0;
+	//	destfix = 0;
+	//	break;
+	//}
+	//sceGuBlendFunc(op,src,dest,srcfix,destfix);
+	//dxpGraphicsData.op = op;
+	//dxpGraphicsData.src = src;
+	//dxpGraphicsData.dest = dest;
+	//dxpGraphicsData.srcfix = srcfix;
+	//dxpGraphicsData.destfix = destfix;
+
+	//int tfx,tcc;
+	//tcc = GU_TCC_RGBA;
+	//tfx = GU_TFX_MODULATE;
+	//sceGuTexFunc(tfx,tcc);
+	//dxpGraphicsData.tfx = tfx;
+	//dxpGraphicsData.tcc = tcc;
+//	GUENABLE(GU_ALPHA_TEST);
+//	sceGuAlphaFunc(GU_NOTEQUAL,0x00,0xff);
+
+	u32 diffuse = material.DiffuseColor;
+//	diffuse = diffuse & 0x00ffffff
+//		| (((diffuse >> 24) * (blendParam & 0xff) / 255) << 24);
+	dxpGuModelColor(material.EmissiveColor,material.AmbientColor,diffuse,material.SpecularColor);
+	sceGuSpecular(material.SpecularPower);	
+}
+
 int DXPLoadModel_MMD(const char *filename)
 {
-	
+
 	return -1;
 }
 
